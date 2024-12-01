@@ -36,7 +36,7 @@ async function initializeTabStates() {
 
 function createTabState(url) {
   return {
-      domain: getDomain(url),
+      domain: getDomain(url) || 'unknown',
       startTime: null,
       isActive: false,
       lastUpdated: null
@@ -258,6 +258,9 @@ chrome.tabs.onCreated.addListener((tab) => {
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   const currentTime = Date.now();
+  console.log("Switching  "+activeTabId);
+  console.log("The activated tabId is"+activeInfo.tabId);
+  
   
   try {
       if (activeTabId && tabStates[activeTabId]?.isActive) {
@@ -290,7 +293,6 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
       console.error('Error in onActivated listener:', error);
   }
 });
-
 chrome.windows.onFocusChanged.addListener((windowId) => {
   const currentTime = new Date().getTime();
   
@@ -341,10 +343,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
+  console.log("Removing "+tabId);
+  console.log(tabId === activeTabId);
+  
+  if (tabId === activeTabId) {
+    activeTabId=null;
+  }
+  
   if (tabStates[tabId]?.isActive) {
       const currentTime = new Date().getTime();
       await updateTimeSpent(tabId, currentTime - (tabStates[tabId].lastUpdated || currentTime));
   }
+ 
   delete tabStates[tabId];
 });
 
