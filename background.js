@@ -254,20 +254,33 @@ chrome.tabs.onCreated.addListener((tab) => {
           lastUpdated: null
       };
   }
+  console.log(tabStates);
+  
 });
+
+ function CheckIfTabExists (keyToCheck){
+    return keyToCheck in tabStates;
+}
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   const currentTime = Date.now();
-  console.log("Switching  "+activeTabId);
-  console.log("The activated tabId is"+activeInfo.tabId);
+  console.log("Switching from  "+activeTabId +"to"+activeInfo.tabId);
+ 
   
   
   try {
-      if (activeTabId && tabStates[activeTabId]?.isActive) {
-          await updateTimeSpent(activeTabId, currentTime - (tabStates[activeTabId].lastUpdated || currentTime));
-          tabStates[activeTabId].isActive = false;
-          tabStates[activeTabId].lastUpdated = null;
+    console.log(CheckIfTabExists(activeTabId));
+    
+  if (CheckIfTabExists(activeTabId)) {
+    if (activeTabId && tabStates[activeTabId]?.isActive) {
+      await updateTimeSpent(activeTabId, currentTime - (tabStates[activeTabId].lastUpdated || currentTime));
+      tabStates[activeTabId].isActive = false;
+      tabStates[activeTabId].lastUpdated = null;
       }
+  }
+    
+    
+      
       
       activeTabId = activeInfo.tabId;
       
@@ -346,16 +359,16 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   console.log("Removing "+tabId);
   console.log(tabId === activeTabId);
   
-  if (tabId === activeTabId) {
-    activeTabId=null;
-  }
+
   
-  if (tabStates[tabId]?.isActive) {
-      const currentTime = new Date().getTime();
-      await updateTimeSpent(tabId, currentTime - (tabStates[tabId].lastUpdated || currentTime));
-  }
+  // if (tabStates[tabId]?.isActive) {
+  //     const currentTime = new Date().getTime();
+  //     await updateTimeSpent(tabId, currentTime - (tabStates[tabId].lastUpdated || currentTime));
+  // }
  
   delete tabStates[tabId];
+  console.log("Completely removed"+tabId);
+  
 });
 
 // Time tracking functions
